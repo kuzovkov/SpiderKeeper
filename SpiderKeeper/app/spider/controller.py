@@ -10,10 +10,11 @@ from flask import flash
 from flask import redirect
 from flask import render_template
 from flask import session
-from flask.ext.restful_swagger import swagger
+from flask_restful_swagger import swagger
 from werkzeug.utils import secure_filename
+from functools import wraps
 
-from SpiderKeeper.app import db, api, agent, app
+from SpiderKeeper.app import db, api, agent, app, config
 from SpiderKeeper.app.spider.model import JobInstance, Project, JobExecution, SpiderInstance, JobRunType
 
 api_spider_bp = Blueprint('spider', __name__)
@@ -23,10 +24,21 @@ api_spider_bp = Blueprint('spider', __name__)
 '''
 
 
+def require_appkey(view_function):
+    @wraps(view_function)
+    # the new, post-decoration function. Note *args and **kwargs here.
+    def decorated_function(*args, **kwargs):
+        if request.args.get('api_key') and request.args.get('api_key') == config.API_KEY:
+            return view_function(*args, **kwargs)
+        else:
+            abort(401)
+    return decorated_function
+
 class ProjectCtrl(flask_restful.Resource):
     @swagger.operation(
         summary='list projects',
         parameters=[])
+    @require_appkey
     def get(self):
         return [project.to_dict() for project in Project.query.all()]
 
@@ -39,6 +51,7 @@ class ProjectCtrl(flask_restful.Resource):
             "paramType": "form",
             "dataType": 'string'
         }])
+    @require_appkey
     def post(self):
         project_name = request.form['project_name']
         project = Project()
@@ -58,6 +71,7 @@ class SpiderCtrl(flask_restful.Resource):
             "paramType": "path",
             "dataType": 'int'
         }])
+    @require_appkey
     def get(self, project_id):
         project = Project.find_project_by_id(project_id)
         return [spider_instance.to_dict() for spider_instance in
@@ -80,6 +94,7 @@ class SpiderDetailCtrl(flask_restful.Resource):
             "paramType": "path",
             "dataType": 'int'
         }])
+    @require_appkey
     def get(self, project_id, spider_id):
         spider_instance = SpiderInstance.query.filter_by(project_id=project_id, id=spider_id).first()
         return spider_instance.to_dict() if spider_instance else abort(404)
@@ -123,6 +138,7 @@ class SpiderDetailCtrl(flask_restful.Resource):
             "paramType": "form",
             "dataType": 'string'
         }])
+    @require_appkey
     def put(self, project_id, spider_id):
         spider_instance = SpiderInstance.query.filter_by(project_id=project_id, id=spider_id).first()
         if not spider_instance: abort(404)
@@ -157,6 +173,7 @@ class JobCtrl(flask_restful.Resource):
             "paramType": "path",
             "dataType": 'int'
         }])
+    @require_appkey
     def get(self, project_id):
         return [job_instance.to_dict() for job_instance in
                 JobInstance.query.filter_by(run_type="periodic", project_id=project_id).all()]
@@ -237,6 +254,7 @@ class JobCtrl(flask_restful.Resource):
             "paramType": "form",
             "dataType": 'string'
         }])
+    @require_appkey
     def post(self, project_id):
         post_data = request.form
         if post_data:
@@ -356,6 +374,7 @@ class JobDetailCtrl(flask_restful.Resource):
         }
 
         ])
+    @require_appkey
     def put(self, project_id, job_id):
         post_data = request.form
         if post_data:
@@ -387,6 +406,7 @@ class JobExecutionCtrl(flask_restful.Resource):
             "paramType": "path",
             "dataType": 'int'
         }])
+    @require_appkey
     def get(self, project_id):
         return JobExecution.list_jobs(project_id)
 
@@ -411,6 +431,7 @@ class JobExecutionDetailCtrl(flask_restful.Resource):
                 "dataType": 'string'
             }
         ])
+    @require_appkey
     def put(self, project_id, job_exec_id):
         job_execution = JobExecution.query.filter_by(project_id=project_id, id=job_exec_id).first()
         if job_execution:
@@ -650,3 +671,5 @@ def service_stats(project_id):
     project = Project.find_project_by_id(project_id)
     run_stats = JobExecution.list_run_stats_by_hours(project_id)
     return render_template("server_stats.html", run_stats=run_stats)
+
+

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import logging
 import os
 from optparse import OptionParser
@@ -13,7 +15,8 @@ def main():
         SQLALCHEMY_DATABASE_URI=opts.database_url,
         BASIC_AUTH_USERNAME=opts.username,
         BASIC_AUTH_PASSWORD=opts.password,
-        NO_AUTH=opts.no_auth
+        NO_AUTH=opts.no_auth,
+        API_KEY=opts.api_key
     ))
     if opts.verbose:
         app.logger.setLevel(logging.DEBUG)
@@ -65,6 +68,11 @@ def parse_opts(config):
                       help="log level",
                       dest='verbose',
                       action='store_true')
+    parser.add_option("--api-key",
+                      help="api key",
+                      dest='api_key',
+                      default=config.get('API_KEY'))
+
     return parser.parse_args()
 
 

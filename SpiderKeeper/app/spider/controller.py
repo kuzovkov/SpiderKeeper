@@ -28,6 +28,8 @@ def require_appkey(view_function):
     @wraps(view_function)
     # the new, post-decoration function. Note *args and **kwargs here.
     def decorated_function(*args, **kwargs):
+        if not hasattr(config, 'API_KEY'):
+            return view_function(*args, **kwargs)
         if request.args.get('api_key') and request.args.get('api_key') == config.API_KEY:
             return view_function(*args, **kwargs)
         else:

@@ -16,7 +16,7 @@ def main():
         BASIC_AUTH_USERNAME=opts.username,
         BASIC_AUTH_PASSWORD=opts.password,
         NO_AUTH=opts.no_auth,
-        API_KEY=opts.api_key
+        API_KEY=app.config.get('API_KEY', None)
     ))
     if opts.verbose:
         app.logger.setLevel(logging.DEBUG)
@@ -68,10 +68,6 @@ def parse_opts(config):
                       help="log level",
                       dest='verbose',
                       action='store_true')
-    parser.add_option("--api-key",
-                      help="api key",
-                      dest='api_key',
-                      default=config.get('API_KEY'))
 
     return parser.parse_args()
 

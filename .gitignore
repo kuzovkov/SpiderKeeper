@@ -7,4 +7,5 @@ docs/_build
 venv
 dist
 build
+run
 SpiderKeeper.db

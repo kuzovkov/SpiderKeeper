@@ -38,4 +38,6 @@ NO_AUTH = False
 BASIC_AUTH_USERNAME = 'admin'
 BASIC_AUTH_PASSWORD = 'admin'
 BASIC_AUTH_FORCE = True
-API_KEY = '67890'
+
+#api key
+#API_KEY = '3efvbgtr4'
